@@ -13,8 +13,7 @@ import librosa.display
 import re
 import pickle
 from IPython.display import display, HTML
-import python_utils as utils
-import time
+#import python_utils as utils
 
 
 # Load metadata and features.
@@ -123,16 +122,14 @@ for g in genres_all.keys():
 
 # Number of songs per artist
 songs_per_artist = {}
-max_overall_d = 0
-
 for k in artist_all.keys():
     songs_per_artist[k] = len(tracks_sm[tracks_sm['artist.12'] == k])
-    max_overall_d = max(songs_per_artist[k], max_overall_d)
+
 
 
 # Calculating D
 
-def calc_D(songs_per_artist, num_artists_set, max_d):
+def calc_D(songs_per_artist, num_artists_set):
     # total number of songs in Set
     num_songs_set = 0
     data = []
@@ -146,8 +143,7 @@ def calc_D(songs_per_artist, num_artists_set, max_d):
     sd = np.std(data, axis=0)
 
     D = 1 - (sd/(mn * (np.sqrt(num_artists_set) - 1)))
-    D = D * (np.sum(data) * 1.0)/(num_artists_set * max_d)
-#     print D
+
     return D
 
 
@@ -162,16 +158,12 @@ def calc_C(num_artists_set, genres_artist):
     sd = np.std(sum_gen, axis=0)
 
     C = 1 - (sd/(mn * (np.sqrt(len(sum_gen)) - 1)))
-    C = C * (np.sum(sum_gen) * 1.0)/(num_gen_set * num_artists_set)
 
-#     print C
     return C
 
 # Calculating S
 
 def calc_S(artists_in_set, songs_per_artist):
-
-#     print artists_in_set
 
     num_edges = np.count_nonzero(artists_in_set)/2
 
@@ -184,9 +176,6 @@ def calc_S(artists_in_set, songs_per_artist):
     sd = np.std(a_edges, axis=0)
 
     S = 1 - (sd/(mn * (np.sqrt(num_artists_set) - 1)))
-    S = S * (np.sum(a_edges)/num_artists_set ** 2)
-
-#     print S
     return S
 
 print "Full Set :", len(artist_all)
@@ -233,12 +222,12 @@ def main_setup(N):
 
 def main_run(N):
 
-    global g_a, s_p_a, a_rel, artists_in_set, artists_not_in_set, songs_per_artists, genre_artist_master, artist_rel_master, artist_index, ai, max_overall_d
+    global g_a, s_p_a, a_rel, artists_in_set, artists_not_in_set, songs_per_artists, genre_artist_master, artist_rel_master, artist_index, ai
 
     best_artist = []
 
     C = calc_C(N, g_a)
-    D = calc_D(s_p_a, N, max_overall_d)
+    D = calc_D(s_p_a, N)
     S = calc_S(a_rel, s_p_a)
     goodness = C * D * S
 
@@ -282,7 +271,7 @@ def main_run(N):
                 a_rel[:, i] = artist_rel_master[ai, artist_index[b]]
 
                 Cee = calc_C(N, g_a)
-                Dee = calc_D(s_p_a, N, max_overall_d)
+                Dee = calc_D(s_p_a, N)
                 Sss = calc_S(a_rel, s_p_a)
 
                 G = Cee * Dee * Sss
@@ -352,7 +341,4 @@ for i in range(int(sys.argv[3])):
 #         print v[-1], c[-1], d[-1], s[-1]
     overall_best_values.append(list_of_best_values)
 
-save_best("overall_GCSD_new_%s_%s_%s"%(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])), overall_best_values)
-
-
-# call arguments -- size, train/test/valid, number of iterations, jump size
+save_best("overall_GCSD_%s_%s_%s"%(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])), overall_best_values)
